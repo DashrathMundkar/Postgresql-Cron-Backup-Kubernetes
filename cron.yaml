@@ -26,7 +26,7 @@ spec:
             - name: update-backup
               image: postgres:12.1
               command: ["/bin/sh"]
-              args: ["-c", 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U $POSTGRES_USERNAME -h $HOSTNAME -d $DATABASE -p 5432 -f /srv/postgresql/volume/backup.sql']
+              args: ["-c", 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U $POSTGRES_USERNAME -h $HOSTNAME -d $DATABASE -p 5432 -f /var/lib/postgresql/backup.sql']
               env:
                 - name: POSTGRES_USERNAME
                   valueFrom:
@@ -49,13 +49,13 @@ spec:
                       name: postgres-secret
                       key: database
               volumeMounts:
-              - mountPath: "/srv/postgresql/volume"
+              - mountPath: "/var/lib/postgresql"
                 name: postgres-storage
           initContainers:
             - name: postgres-backup
               image: postgres:12.1
               command: ["/bin/sh"]
-              args: ["-c", 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U $POSTGRES_USERNAME -h $HOSTNAME -d $DATABASE -p 5432 > /srv/postgresql/volume/backup.sql']
+              args: ["-c", 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U $POSTGRES_USERNAME -h $HOSTNAME -d $DATABASE -p 5432 > /var/lib/postgresql/backup.sql']
               env:
                 - name: POSTGRES_USERNAME
                   valueFrom:
@@ -85,6 +85,6 @@ spec:
             runAsUser: 999
           volumes:
           - name: postgres-storage
-            emptyDir: {}
+            emptyDir: {} #store backup data temporarialy on worked node. once cron completes it will get deleted.
           
             
