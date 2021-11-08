@@ -78,7 +78,7 @@ spec:
                       name: postgres-secret
                       key: database
               volumeMounts:
-              - mountPath: "/srv/postgresql/volume"
+              - mountPath: "/var/lib/postgresql"
                 name: postgres-storage
           restartPolicy: OnFailure
           securityContext:
