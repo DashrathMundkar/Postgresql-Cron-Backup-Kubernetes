@@ -1,0 +1,90 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+data:
+  username: YWRtaW4=       #admin
+  database: cG9zdGdyZXM=   #postgres
+  hostname: cG9zdGdyZXM=   #postgres
+  password: YWRtaW4=       #admin
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+spec:
+  schedule: "0 */3 * * *" # Every 3 hr
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:          
+            app: backup
+        spec:
+          containers:
+            - name: update-backup
+              image: postgres:12.1
+              command: ["/bin/sh"]
+              args: ["-c", 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U $POSTGRES_USERNAME -h $HOSTNAME -d $DATABASE -p 5432 -f /srv/postgresql/volume/backup.sql']
+              env:
+                - name: POSTGRES_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: username
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: password
+                - name: POSTGRES_HOSTNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: hostname
+                - name: POSTGRES_DATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: database
+              volumeMounts:
+              - mountPath: "/srv/postgresql/volume"
+                name: postgres-storage
+          initContainers:
+            - name: postgres-backup
+              image: postgres:12.1
+              command: ["/bin/sh"]
+              args: ["-c", 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U $POSTGRES_USERNAME -h $HOSTNAME -d $DATABASE -p 5432 > /srv/postgresql/volume/backup.sql']
+              env:
+                - name: POSTGRES_USERNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: username
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: password
+                - name: POSTGRES_HOSTNAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: hostname
+                - name: POSTGRES_DATABASE
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secret
+                      key: database
+              volumeMounts:
+              - mountPath: "/srv/postgresql/volume"
+                name: postgres-storage
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 999
+          volumes:
+          - name: postgres-storage
+            emptyDir: {}
+          
+            
