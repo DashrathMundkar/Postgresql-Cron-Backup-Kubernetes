@@ -85,6 +85,6 @@ spec:
             runAsUser: 999
           volumes:
           - name: postgres-storage
-            emptyDir: {} #store backup data temporarialy on worked node. once cron completes it will get deleted.
+            emptyDir: {} #store backup data temporarily on worker node. once cron completes it will get deleted.
           
             
