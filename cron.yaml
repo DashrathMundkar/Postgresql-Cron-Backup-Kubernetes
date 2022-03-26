@@ -24,7 +24,7 @@ spec:
         spec:
           containers:
             - name: update-backup
-              image: postgres:12.1
+              image: postgres:12
               command: ["/bin/sh"]
               args: ["-c", 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U $POSTGRES_USERNAME -h $HOSTNAME -d $DATABASE -p 5432 -f /var/lib/postgresql/backup.sql']
               env:
@@ -53,7 +53,7 @@ spec:
                 name: postgres-storage
           initContainers:
             - name: postgres-backup
-              image: postgres:12.1
+              image: postgres:12
               command: ["/bin/sh"]
               args: ["-c", 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U $POSTGRES_USERNAME -h $HOSTNAME -d $DATABASE -p 5432 > /var/lib/postgresql/backup.sql']
               env:
